@@ -1,11 +1,9 @@
 import DeviceDetector from "https://cdn.skypack.dev/device-detector-js@2.2.10";
-// Usage: testSupport({client?: string, os?: string}[])
-// Client and os are regular expressions.
-// See: https://cdn.jsdelivr.net/npm/device-detector-js@2.2.10/README.md for
-// legal values for client and os
+
 testSupport([
   { client: 'Chrome' },
 ]);
+
 function testSupport(supportedDevices) {
   const deviceDetector = new DeviceDetector();
   const detectedDevice = deviceDetector.parse(navigator.userAgent);
@@ -31,8 +29,8 @@ function testSupport(supportedDevices) {
       `is not well supported at this time, expect some flakiness while we improve our code.`);
   }
 }
+
 const controls = window;
-const LandmarkGrid = window.LandmarkGrid;
 const drawingUtils = window;
 const mpPose = window;
 const options = {
@@ -40,63 +38,23 @@ const options = {
     return `https://cdn.jsdelivr.net/npm/@mediapipe/pose@${mpPose.VERSION}/${file}`;
   }
 };
-// Our input frames will come from here.
 const videoElement = document.getElementsByClassName('input_video')[0];
 const canvasElement = document.getElementsByClassName('output_canvas')[0];
 const controlsElement = document.getElementsByClassName('control-panel')[0];
 const canvasCtx = canvasElement.getContext('2d');
-// We'll add this to our control panel later, but we'll save it here so we can
-// call tick() each time the graph runs.
-// const fpsControl = new controls.FPS();
-// Optimization: Turn off animated spinner after its hiding animation is done.
 const spinner = document.querySelector('.loading');
 spinner.ontransitionend = () => {
   spinner.style.display = 'none';
 };
-// const landmarkContainer = document.getElementsByClassName('landmark-grid-container')[0];
-// const grid = new LandmarkGrid(landmarkContainer, {
-//   connectionColor: 0xCCCCCC,
-//   definedColors: [{ name: 'LEFT', value: 0xffa500 }, { name: 'RIGHT', value: 0x00ffff }],
-//   range: 2,
-//   fitToGrid: true,
-//   labelSuffix: 'm',
-//   landmarkSize: 2,
-//   numCellsPerAxis: 4,
-//   showHidden: false,
-//   centered: true,
-// });
-let activeEffect = 'mask';
+let visibleDebug = true;
+
 function onResults(results) {
-  // Hide the spinner.
   document.body.classList.add('loaded');
-  // Update the frame rate.
-  // fpsControl.tick();
-  // Draw the overlays.
   canvasCtx.save();
   canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
-  if (results.segmentationMask) {
-    canvasCtx.drawImage(results.segmentationMask, 0, 0, canvasElement.width, canvasElement.height);
-    // Only overwrite existing pixels.
-    if (activeEffect === 'mask' || activeEffect === 'both') {
-      canvasCtx.globalCompositeOperation = 'source-in';
-      // This can be a color or a texture or whatever...
-      canvasCtx.fillStyle = '#00FF007F';
-      canvasCtx.fillRect(0, 0, canvasElement.width, canvasElement.height);
-    }
-    else {
-      canvasCtx.globalCompositeOperation = 'source-out';
-      canvasCtx.fillStyle = '#0000FF7F';
-      canvasCtx.fillRect(0, 0, canvasElement.width, canvasElement.height);
-    }
-    // Only overwrite missing pixels.
-    canvasCtx.globalCompositeOperation = 'destination-atop';
-    canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
-    canvasCtx.globalCompositeOperation = 'source-over';
-  }
-  else {
-    canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
-  }
-  if (results.poseLandmarks) {
+  canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
+  // Connecting the points with the line
+  if (results.poseLandmarks && visibleDebug) {
     drawingUtils.drawConnectors(canvasCtx, results.poseLandmarks, mpPose.POSE_CONNECTIONS, { visibilityMin: 0.65, color: 'white' });
     drawingUtils.drawLandmarks(canvasCtx, Object.values(mpPose.POSE_LANDMARKS_LEFT)
       .map(index => results.poseLandmarks[index]), { visibilityMin: 0.65, color: 'white', fillColor: 'rgb(255,138,0)' });
@@ -105,25 +63,19 @@ function onResults(results) {
     drawingUtils.drawLandmarks(canvasCtx, Object.values(mpPose.POSE_LANDMARKS_NEUTRAL)
       .map(index => results.poseLandmarks[index]), { visibilityMin: 0.65, color: 'white', fillColor: 'white' });
   }
+  // Show arms
+  // ここにコード書く
   canvasCtx.restore();
-  // if (results.poseWorldLandmarks) {
-  //   grid.updateLandmarks(results.poseWorldLandmarks, mpPose.POSE_CONNECTIONS, [
-  //     { list: Object.values(mpPose.POSE_LANDMARKS_LEFT), color: 'LEFT' },
-  //     { list: Object.values(mpPose.POSE_LANDMARKS_RIGHT), color: 'RIGHT' },
-  //   ]);
-  // }
-  // else {
-  //   grid.updateLandmarks([]);
-  // }
 }
+
 const pose = new mpPose.Pose(options);
+
 pose.onResults(onResults);
-// Present a control panel through which the user can manipulate the solution
-// options.
 new controls
   .ControlPanel(controlsElement, {
     selfieMode: true,
     modelComplexity: 1,
+    visibleDebug: true,
     smoothLandmarks: true,
     enableSegmentation: false,
     smoothSegmentation: true,
@@ -133,12 +85,8 @@ new controls
   })
   .add([
     new controls.StaticText({ title: '腕だけムキムキ' }),
-    // fpsControl,
-    // new controls.Toggle({ title: 'Selfie Mode', field: 'selfieMode' }),
     new controls.SourcePicker({
       onSourceChanged: () => {
-        // Resets because this model gives better results when reset between
-        // source changes.
         pose.reset();
       },
       onFrame: async (input, size) => {
@@ -157,35 +105,11 @@ new controls
         await pose.send({ image: input });
       },
     }),
-    // new controls.Slider({
-    //   title: 'Model Complexity',
-    //   field: 'modelComplexity',
-    //   discrete: ['Lite', 'Full', 'Heavy'],
-    // }),
-    // new controls.Toggle({ title: 'Smooth Landmarks', field: 'smoothLandmarks' }),
-    // new controls.Toggle({ title: 'Enable Segmentation', field: 'enableSegmentation' }),
-    // new controls.Toggle({ title: 'Smooth Segmentation', field: 'smoothSegmentation' }),
-    // new controls.Slider({
-    //   title: 'Min Detection Confidence',
-    //   field: 'minDetectionConfidence',
-    //   range: [0, 1],
-    //   step: 0.01
-    // }),
-    // new controls.Slider({
-    //   title: 'Min Tracking Confidence',
-    //   field: 'minTrackingConfidence',
-    //   range: [0, 1],
-    //   step: 0.01
-    // }),
-    // new controls.Slider({
-    //   title: 'Effect',
-    //   field: 'effect',
-    //   discrete: { 'background': 'Background', 'mask': 'Foreground' },
-    // }),
+    new controls.Toggle({ title: 'Veiw Debug', field: 'visibleDebug' }),
   ])
   .on(x => {
     const options = x;
+    visibleDebug = x.visibleDebug;
     videoElement.classList.toggle('selfie', options.selfieMode);
-    activeEffect = x['effect'];
     pose.setOptions(options);
   });
