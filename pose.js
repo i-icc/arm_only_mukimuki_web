@@ -1,8 +1,13 @@
 import DeviceDetector from "https://cdn.skypack.dev/device-detector-js@2.2.10";
 
-testSupport([
-  { client: 'Chrome' },
-]);
+testSupport([{ client: "Chrome" }]);
+
+function getDistance(point1, point2, w, h) {
+  result = 0;
+  xd = Math.abs(point1.x - point2.x) * w;
+  yd = Math.abs(point1.y - point2.y) * h;
+  return result;
+}
 
 function testSupport(supportedDevices) {
   const deviceDetector = new DeviceDetector();
@@ -25,8 +30,10 @@ function testSupport(supportedDevices) {
     break;
   }
   if (!isSupported) {
-    alert(`This demo, running on ${detectedDevice.client.name}/${detectedDevice.os.name}, ` +
-      `is not well supported at this time, expect some flakiness while we improve our code.`);
+    alert(
+      `This demo, running on ${detectedDevice.client.name}/${detectedDevice.os.name}, ` +
+        `is not well supported at this time, expect some flakiness while we improve our code.`
+    );
   }
 }
 
@@ -36,55 +43,87 @@ const mpPose = window;
 const options = {
   locateFile: (file) => {
     return `https://cdn.jsdelivr.net/npm/@mediapipe/pose@${mpPose.VERSION}/${file}`;
-  }
+  },
 };
-const videoElement = document.getElementsByClassName('input_video')[0];
-const canvasElement = document.getElementsByClassName('output_canvas')[0];
-const controlsElement = document.getElementsByClassName('control-panel')[0];
-const canvasCtx = canvasElement.getContext('2d');
-const spinner = document.querySelector('.loading');
+const videoElement = document.getElementsByClassName("input_video")[0];
+const canvasElement = document.getElementsByClassName("output_canvas")[0];
+const controlsElement = document.getElementsByClassName("control-panel")[0];
+const canvasCtx = canvasElement.getContext("2d");
+const spinner = document.querySelector(".loading");
 spinner.ontransitionend = () => {
-  spinner.style.display = 'none';
+  spinner.style.display = "none";
 };
 let visibleDebug = true;
+const arm2 = new Image();
+arm2.src = "./images/arm2.png";
 
 function onResults(results) {
-  document.body.classList.add('loaded');
+  document.body.classList.add("loaded");
   canvasCtx.save();
   canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
-  canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
+  canvasCtx.drawImage(
+    results.image,
+    0,
+    0,
+    canvasElement.width,
+    canvasElement.height
+  );
   // Connecting the points with the line
   if (results.poseLandmarks && visibleDebug) {
-    drawingUtils.drawConnectors(canvasCtx, results.poseLandmarks, mpPose.POSE_CONNECTIONS, { visibilityMin: 0.65, color: 'white' });
-    drawingUtils.drawLandmarks(canvasCtx, Object.values(mpPose.POSE_LANDMARKS_LEFT)
-      .map(index => results.poseLandmarks[index]), { visibilityMin: 0.65, color: 'white', fillColor: 'rgb(255,138,0)' });
-    drawingUtils.drawLandmarks(canvasCtx, Object.values(mpPose.POSE_LANDMARKS_RIGHT)
-      .map(index => results.poseLandmarks[index]), { visibilityMin: 0.65, color: 'white', fillColor: 'rgb(0,217,231)' });
-    drawingUtils.drawLandmarks(canvasCtx, Object.values(mpPose.POSE_LANDMARKS_NEUTRAL)
-      .map(index => results.poseLandmarks[index]), { visibilityMin: 0.65, color: 'white', fillColor: 'white' });
+    drawingUtils.drawConnectors(
+      canvasCtx,
+      results.poseLandmarks,
+      mpPose.POSE_CONNECTIONS,
+      { visibilityMin: 0.65, color: "white" }
+    );
+    drawingUtils.drawLandmarks(
+      canvasCtx,
+      Object.values(mpPose.POSE_LANDMARKS_LEFT).map(
+        (index) => results.poseLandmarks[index]
+      ),
+      { visibilityMin: 0.65, color: "white", fillColor: "rgb(255,138,0)" }
+    );
+    drawingUtils.drawLandmarks(
+      canvasCtx,
+      Object.values(mpPose.POSE_LANDMARKS_RIGHT).map(
+        (index) => results.poseLandmarks[index]
+      ),
+      { visibilityMin: 0.65, color: "white", fillColor: "rgb(0,217,231)" }
+    );
+    drawingUtils.drawLandmarks(
+      canvasCtx,
+      Object.values(mpPose.POSE_LANDMARKS_NEUTRAL).map(
+        (index) => results.poseLandmarks[index]
+      ),
+      { visibilityMin: 0.65, color: "white", fillColor: "white" }
+    );
   }
   // Show arms
   // ここにコード書く
+  if (results.poseLandmarks) {
+    console.log(results.poseLandmarks[12], results[14]);
+    canvasCtx.drawImage(arm2, 0, 0);
+  }
+  // kokomade
   canvasCtx.restore();
 }
 
 const pose = new mpPose.Pose(options);
 
 pose.onResults(onResults);
-new controls
-  .ControlPanel(controlsElement, {
-    selfieMode: true,
-    modelComplexity: 1,
-    visibleDebug: true,
-    smoothLandmarks: true,
-    enableSegmentation: false,
-    smoothSegmentation: true,
-    minDetectionConfidence: 0.5,
-    minTrackingConfidence: 0.5,
-    effect: 'background',
-  })
+new controls.ControlPanel(controlsElement, {
+  selfieMode: true,
+  modelComplexity: 1,
+  visibleDebug: true,
+  smoothLandmarks: true,
+  enableSegmentation: false,
+  smoothSegmentation: true,
+  minDetectionConfidence: 0.5,
+  minTrackingConfidence: 0.5,
+  effect: "background",
+})
   .add([
-    new controls.StaticText({ title: '腕だけムキムキ' }),
+    new controls.StaticText({ title: "腕だけムキムキ" }),
     new controls.SourcePicker({
       onSourceChanged: () => {
         pose.reset();
@@ -95,8 +134,7 @@ new controls
         if (window.innerWidth > window.innerHeight) {
           height = window.innerHeight;
           width = height / aspect;
-        }
-        else {
+        } else {
           width = window.innerWidth;
           height = width * aspect;
         }
@@ -105,11 +143,11 @@ new controls
         await pose.send({ image: input });
       },
     }),
-    new controls.Toggle({ title: 'Veiw Debug', field: 'visibleDebug' }),
+    new controls.Toggle({ title: "Veiw Debug", field: "visibleDebug" }),
   ])
-  .on(x => {
+  .on((x) => {
     const options = x;
     visibleDebug = x.visibleDebug;
-    videoElement.classList.toggle('selfie', options.selfieMode);
+    videoElement.classList.toggle("selfie", options.selfieMode);
     pose.setOptions(options);
   });
