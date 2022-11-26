@@ -32,7 +32,7 @@ function testSupport(supportedDevices) {
   if (!isSupported) {
     alert(
       `This demo, running on ${detectedDevice.client.name}/${detectedDevice.os.name}, ` +
-        `is not well supported at this time, expect some flakiness while we improve our code.`
+      `is not well supported at this time, expect some flakiness while we improve our code.`
     );
   }
 }
@@ -54,6 +54,7 @@ spinner.ontransitionend = () => {
   spinner.style.display = "none";
 };
 let visibleDebug = true;
+const threshold = 0.65;
 const arm2 = new Image();
 arm2.src = "./images/arm2.png";
 
@@ -101,8 +102,13 @@ function onResults(results) {
   // Show arms
   // ここにコード書く
   if (results.poseLandmarks) {
-    console.log(results.poseLandmarks[12], results[14]);
-    canvasCtx.drawImage(arm2, 0, 0);
+    const poses = results.poseLandmarks
+    let w = canvasElement.width;
+    let h = canvasElement.height;
+    // 左腕2
+    if (poses[12].visibility > threshold && poses[14].visibility > threshold) {
+      canvasCtx.drawImage(arm2, poses[12].x * w, poses[12].y * h, auto, getDistance(poses[12], poses[14], w, h));
+    };
   }
   // kokomade
   canvasCtx.restore();
