@@ -3,10 +3,17 @@ import DeviceDetector from "https://cdn.skypack.dev/device-detector-js@2.2.10";
 testSupport([{ client: "Chrome" }]);
 
 function getDistance(point1, point2, w, h) {
-  result = 0;
-  xd = Math.abs(point1.x - point2.x) * w;
-  yd = Math.abs(point1.y - point2.y) * h;
-  return result;
+  const xd = Math.abs(point1.x - point2.x) * w;
+  const yd = Math.abs(point1.y - point2.y) * h;
+  const d = Math.sqrt(xd ** 2 + yd ** 2);
+  return d;
+}
+
+function getRotate(point1, point2) {
+  const x = (point1.x + point2.x) / 2;
+  const y = (point1.y + point2.y) / 2;
+  const r = Math.atan2(point2.y - point1.y, point2.x - point1.x) - Math.PI / 2;
+  return [x, y, r];
 }
 
 function testSupport(supportedDevices) {
@@ -58,6 +65,20 @@ const threshold = 0.65;
 const arm2 = new Image();
 arm2.src = "./images/arm2.png";
 
+const drawImage = (image, point1, point2, w, h) => {
+  canvasCtx.save();
+
+  const xyr = getRotate(point1, point2)
+  canvasCtx.translate(xyr[0] * w, xyr[1] * h);
+  canvasCtx.rotate(xyr[2]);
+
+  const image_height = getDistance(point1, point2, w, h) * 1.3;
+  const image_width = image_height * image.width / image.height;
+  canvasCtx.drawImage(image, -image_width / 2, -image_height / 2, image_width, image_height);
+
+  canvasCtx.restore();
+}
+
 function onResults(results) {
   document.body.classList.add("loaded");
   canvasCtx.save();
@@ -107,7 +128,10 @@ function onResults(results) {
     let h = canvasElement.height;
     // 左腕2
     if (poses[12].visibility > threshold && poses[14].visibility > threshold) {
-      canvasCtx.drawImage(arm2, poses[12].x * w, poses[12].y * h, auto, getDistance(poses[12], poses[14], w, h));
+      drawImage(arm2, poses[12], poses[14], w, h)
+
+      // const arm2_length = getDistance(poses[12], poses[14], w, h);
+      // canvasCtx.drawImage(arm2, poses[12].x * w, poses[12].y * h, arm2_length * arm2.width / arm2.height, arm2_length);
     };
   }
   // kokomade
@@ -129,7 +153,7 @@ new controls.ControlPanel(controlsElement, {
   effect: "background",
 })
   .add([
-    new controls.StaticText({ title: "腕だけムキムキ" }),
+    new controls.StaticText({ title: "腕だけムキムキweb" }),
     new controls.SourcePicker({
       onSourceChanged: () => {
         pose.reset();
