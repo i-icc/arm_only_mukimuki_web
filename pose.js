@@ -151,6 +151,12 @@ function onResults(results) {
     if (poses[11].visibility > threshold && poses[13].visibility > threshold) {
       drawImage(arm2, poses[11], poses[13], w, h, true);
     }
+    if (poses[13].visibility > threshold && poses[15].visibility > threshold) {
+      drawImage(arm1, poses[13], poses[15], w, h, true);
+    }
+    if (poses[15].visibility > threshold && poses[19].visibility > threshold) {
+      drawImage(hand, poses[15], poses[19], w, h, true, true);
+    }
   }
   canvasCtx.restore();
 }
