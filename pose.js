@@ -62,8 +62,12 @@ spinner.ontransitionend = () => {
 };
 let visibleDebug = true;
 const threshold = 0.65;
+const arm1 = new Image();
 const arm2 = new Image();
+arm1.src = "./images/arm1.png";
 arm2.src = "./images/arm2.png";
+
+
 
 const drawImage = (image, point1, point2, w, h) => {
   canvasCtx.save();
@@ -126,13 +130,13 @@ function onResults(results) {
     const poses = results.poseLandmarks
     let w = canvasElement.width;
     let h = canvasElement.height;
-    // 左腕2
+    // 左腕
     if (poses[12].visibility > threshold && poses[14].visibility > threshold) {
-      drawImage(arm2, poses[12], poses[14], w, h)
-
-      // const arm2_length = getDistance(poses[12], poses[14], w, h);
-      // canvasCtx.drawImage(arm2, poses[12].x * w, poses[12].y * h, arm2_length * arm2.width / arm2.height, arm2_length);
-    };
+      drawImage(arm2, poses[12], poses[14], w, h);
+    }
+    if (poses[14].visibility > threshold && poses[16].visibility > threshold) {
+      drawImage(arm1, poses[14], poses[16], w, h);
+    }
   }
   // kokomade
   canvasCtx.restore();
