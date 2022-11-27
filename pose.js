@@ -70,15 +70,18 @@ arm2.src = "./images/arm2.png";
 hand.src = "./images/hand.png";
 
 
-const drawImage = (image, point1, point2, w, h, isHand = false) => {
+const drawImage = (image, point1, point2, w, h, isRight = false, isHand = false) => {
   canvasCtx.save();
 
   const xyr = getRotate(point1, point2)
   if (isHand)
     canvasCtx.translate(point2.x * w, point2.y * h);
-  else 
+  else
     canvasCtx.translate(xyr[0] * w, xyr[1] * h);
   canvasCtx.rotate(xyr[2]);
+
+  if (isRight)
+    canvasCtx.scale(-1, 1);
 
   let image_height = getDistance(point1, point2, w, h) * 1.3;
   if (isHand) image_height *= 2;
@@ -130,7 +133,6 @@ function onResults(results) {
     );
   }
   // Show arms
-  // ここにコード書く
   if (results.poseLandmarks) {
     const poses = results.poseLandmarks
     let w = canvasElement.width;
@@ -143,10 +145,13 @@ function onResults(results) {
       drawImage(arm1, poses[14], poses[16], w, h);
     }
     if (poses[16].visibility > threshold && poses[20].visibility > threshold) {
-      drawImage(hand, poses[16], poses[20], w, h, true);
+      drawImage(hand, poses[16], poses[20], w, h, false, true);
+    }
+    // 右腕
+    if (poses[11].visibility > threshold && poses[13].visibility > threshold) {
+      drawImage(arm2, poses[11], poses[13], w, h, true);
     }
   }
-  // kokomade
   canvasCtx.restore();
 }
 
