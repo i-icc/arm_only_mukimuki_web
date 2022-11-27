@@ -161,7 +161,7 @@ pose.onResults(onResults);
 new controls.ControlPanel(controlsElement, {
   selfieMode: true,
   modelComplexity: 1,
-  visibleDebug: true,
+  visibleDebug: false,
   smoothLandmarks: true,
   enableSegmentation: false,
   smoothSegmentation: true,
