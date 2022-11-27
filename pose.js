@@ -64,19 +64,24 @@ let visibleDebug = true;
 const threshold = 0.65;
 const arm1 = new Image();
 const arm2 = new Image();
+const hand = new Image();
 arm1.src = "./images/arm1.png";
 arm2.src = "./images/arm2.png";
+hand.src = "./images/hand.png";
 
 
-
-const drawImage = (image, point1, point2, w, h) => {
+const drawImage = (image, point1, point2, w, h, isHand = false) => {
   canvasCtx.save();
 
   const xyr = getRotate(point1, point2)
-  canvasCtx.translate(xyr[0] * w, xyr[1] * h);
+  if (isHand)
+    canvasCtx.translate(point2.x * w, point2.y * h);
+  else 
+    canvasCtx.translate(xyr[0] * w, xyr[1] * h);
   canvasCtx.rotate(xyr[2]);
 
-  const image_height = getDistance(point1, point2, w, h) * 1.3;
+  let image_height = getDistance(point1, point2, w, h) * 1.3;
+  if (isHand) image_height *= 2;
   const image_width = image_height * image.width / image.height;
   canvasCtx.drawImage(image, -image_width / 2, -image_height / 2, image_width, image_height);
 
@@ -136,6 +141,9 @@ function onResults(results) {
     }
     if (poses[14].visibility > threshold && poses[16].visibility > threshold) {
       drawImage(arm1, poses[14], poses[16], w, h);
+    }
+    if (poses[16].visibility > threshold && poses[20].visibility > threshold) {
+      drawImage(hand, poses[16], poses[20], w, h, true);
     }
   }
   // kokomade
