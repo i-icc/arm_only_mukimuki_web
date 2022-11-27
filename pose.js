@@ -130,7 +130,6 @@ function onResults(results) {
     );
   }
   // Show arms
-  // ここにコード書く
   if (results.poseLandmarks) {
     const poses = results.poseLandmarks
     let w = canvasElement.width;
@@ -146,7 +145,6 @@ function onResults(results) {
       drawImage(hand, poses[16], poses[20], w, h, true);
     }
   }
-  // kokomade
   canvasCtx.restore();
 }
 
