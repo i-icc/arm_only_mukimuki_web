@@ -38,7 +38,7 @@ function testSupport(supportedDevices) {
   }
   if (!isSupported) {
     alert(
-      `This demo, running on ${detectedDevice.client.name}/${detectedDevice.os.name}, ` +
+      `This app, running on ${detectedDevice.client.name}/${detectedDevice.os.name}, ` +
       `is not well supported at this time, expect some flakiness while we improve our code.`
     );
   }
